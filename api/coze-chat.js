@@ -75,6 +75,75 @@ module.exports = async function handler(req, res) {
     const chatData = await chatResp.json();
 
     if (!chatResp.ok || chatData.code !== 0 || !chatData.data) {
+      console.error('[coze-chat] 发起对话失败，Coze 原始返回：', JSON.stringify(chatData));
+      res.status(502).json({ error: 'Coze 发起对话失败', detail: chatData });
+      return;
+    }
+
+    const conversationId = chatData.data.conversation_id;
+    const chatId = chatData.data.id;
+    let status = chatData.data.status;
+
+    // 2) 轮询直到对话完成（或超时 / 失败）
+    let attempts = 0;
+    while (status !== 'completed' && attempts < MAX_POLL_ATTEMPTS) {
+      await sleep(POLL_INTERVAL_MS);
+      const retrieveResp = await fetch(
+        `${COZE_API_BASE}/v3/chat/retrieve?conversation_id=${conversationId}&chat_id=${chatId}`,
+        { headers }
+      );
+      const retrieveData = await retrieveResp.json();
+      status = retrieveData && retrieveData.data && retrieveData.data.status;
+      attempts += 1;
+
+      if (status === 'failed') {
+        res.status(502).json({ error: 'Agent 处理失败', detail: retrieveData });
+        return;
+      }
+    }
+
+    if (status !== 'completed') {
+      res.status(504).json({ error: 'Agent 响应超时，请稍后重试' });
+      return;
+    }
+
+    // 3) 拉取消息列表，取出 assistant 的 answer 类型内容
+    const listResp = await fetch(
+      `${COZE_API_BASE}/v3/chat/message/list?conversation_id=${conversationId}&chat_id=${chatId}`,
+      { headers }
+    );
+    const listData = await listResp.json();
+
+    const answer = ((listData && listData.data) || [])
+      .filter((m) => m.role === 'assistant' && m.type === 'answer')
+      .map((m) => m.content)
+      .join('\n')
+      .trim();
+
+    res.status(200).json({ reply: answer || '（Agent 没有返回文本内容）' });
+  } catch (err) {
+    res.status(500).json({ error: '服务器请求 Coze 时出错', detail: String(err) });
+  }
+};  };
+
+  try {
+    // 1) 发起对话
+    const chatResp = await fetch(`${COZE_API_BASE}/v3/chat`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user_id: 'daily-tip-demo-user',
+        stream: false,
+        auto_save_history: true,
+        additional_messages: [
+          { role: 'user', content: message, content_type: 'text' }
+        ]
+      })
+    });
+    const chatData = await chatResp.json();
+
+    if (!chatResp.ok || chatData.code !== 0 || !chatData.data) {
       res.status(502).json({ error: 'Coze 发起对话失败', detail: chatData });
       return;
     }
