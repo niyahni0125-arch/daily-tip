@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>每日英语小贴</title>
+<style>
+  :root{
+    --bg-page:#E6EAF3;
+    --phone-bg:#F6F8FC;
+    --brand-blue:#2E63E6;
+    --brand-blue-dark:#1B3F9E;
+    --blue-tint:#EAF1FF;
+    --blue-tint-strong:#DCE8FF;
+    --ink:#16233F;
+    --ink-soft:#5C6B8A;
+    --ink-faint:#93A0BD;
+    --amber:#FFB84D;
+    --amber-soft:#FFE9C7;
+    --amber-ink:#8A5A12;
+    --white:#FFFFFF;
+    --font-ui:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+    --font-quote:Georgia,"Songti SC","STSong","Times New Roman",serif;
+    --ease-card:cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-page);
+    font-family:var(--font-ui);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .page{
+    width:100%;
+    display:flex;
+    justify-content:center;
+  }
+
+  .phone{
+    width:375px;
+    max-width:100%;
+    height:720px;
+    max-height:92vh;
+    background:var(--phone-bg);
+    border-radius:40px;
+    box-shadow:
+      0 30px 60px -20px rgba(27,63,158,.35),
+      0 10px 24px -6px rgba(27,63,158,.18);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* ---------- Header ---------- */
+  .app-header{
+    padding:22px 24px 14px;
+    flex-shrink:0;
+  }
+  .app-name{
+    margin:0 0 4px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:var(--brand-blue);
+    text-transform:uppercase;
+  }
+  .app-date{
+    margin:0;
+    font-size:20px;
+    font-weight:700;
+    color:var(--ink);
+  }
+
+  /* ---------- Stage (sliding views) ---------- */
+  .stage{
+    position:relative;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .view{
+    position:absolute;
+    inset:0;
+    padding:8px 20px 20px;
+    transition:transform .48s var(--ease-card), opacity .48s var(--ease-card), filter .48s var(--ease-card);
+  }
+
+  .view-card{
+    display:flex;
+    flex-direction:column;
+    z-index:1;
+  }
+
+  .view-detail{
+    transform:translateX(100%);
+    overflow-y:auto;
+    z-index:2;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .stage.detail-active .view-card{
+    transform:translateX(-16%);
+    opacity:.35;
+    filter:saturate(.6);
+    pointer-events:none;
+  }
+  .stage.detail-active .view-detail{
+    transform:translateX(0);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .view{ transition:none; }
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    position:relative;
+    background:var(--white);
+    border-radius:26px;
+    padding:34px 22px 20px;
+    box-shadow:
+      0 20px 40px -14px rgba(30,63,158,.28),
+      0 6px 14px rgba(30,63,158,.10);
+    cursor:pointer;
+    border:1px solid rgba(46,99,230,.06);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover{
+    transform:translateY(-2px);
+    box-shadow:
+      0 26px 46px -14px rgba(30,63,158,.32),
+      0 8px 18px rgba(30,63,158,.14);
+  }
+  .card:active{
+    transform:translateY(0) scale(.99);
+  }
+  .card:focus-visible{
+    outline:3px solid var(--brand-blue);
+    outline-offset:3px;
+  }
+
+  .tape{
+    position:absolute;
+    top:-13px;
+    left:50%;
+    width:104px;
+    height:26px;
+    transform:translateX(-50%) rotate(-4deg);
+    background:linear-gradient(135deg, rgba(255,255,255,.9), var(--amber-soft) 70%);
+    border-radius:3px;
+    box-shadow:0 4px 8px rgba(138,90,18,.18);
+    z-index:2;
+  }
+
+  .card-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+
+  .mascot{
+    position:relative;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:linear-gradient(145deg, var(--brand-blue), var(--brand-blue-dark));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    box-shadow:0 8px 16px -4px rgba(27,63,158,.45);
+  }
+  .pulse-ring{
+    position:absolute;
+    inset:-6px;
+    border-radius:50%;
+    border:2px solid var(--brand-blue);
+    opacity:.55;
+    animation:pulse 2.4s infinite ease-out;
+  }
+  @keyframes pulse{
+    0%{ transform:scale(.9); opacity:.55; }
+    70%{ transform:scale(1.35); opacity:0; }
+    100%{ opacity:0; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .pulse-ring{ animation:none; display:none; }
+  }
+
+  .day-pill{
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:999px;
+    background:var(--blue-tint);
+    color:var(--brand-blue-dark);
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.08em;
+  }
+  .day-pill--ghost{
+    background:rgba(255,255,255,.18);
+    color:var(--white);
+  }
+
+  .quote{
+    margin:6px 0 20px;
+    position:relative;
+  }
+  .quote-mark{
+    position:absolute;
+    top:-30px;
+    left:-6px;
+    font-family:var(--font-quote);
+    font-size:78px;
+    color:var(--brand-blue);
+    opacity:.12;
+    line-height:1;
+    pointer-events:none;
+    user-select:none;
+  }
+  .quote-en{
+    position:relative;
+    margin:0 0 12px;
+    font-family:var(--font-quote);
+    font-style:italic;
+    font-size:19px;
+    line-height:1.5;
+    color:var(--ink);
+    font-weight:600;
+  }
+  .quote-zh{
+    margin:0;
+    padding-left:12px;
+    border-left:3px solid var(--blue-tint-strong);
+    font-size:14px;
+    line-height:1.6;
+    color:var(--ink-soft);
+  }
+
+  .card-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:auto;
+    padding-top:10px;
+  }
+  .streak-chip{
+    background:var(--amber-soft);
+    color:var(--amber-ink);
+    font-size:12.5px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .tap-hint{
+    font-size:12px;
+    color:var(--ink-faint);
+    white-space:nowrap;
+  }
+
+  /* ---------- Detail view ---------- */
+  .detail-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 4px 16px;
+    position:sticky;
+    top:0;
+    background:var(--phone-bg);
+  }
+  .back-btn{
+    appearance:none;
+    border:none;
+    background:var(--blue-tint);
+    color:var(--brand-blue-dark);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    padding:8px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .back-btn:hover{ background:var(--blue-tint-strong); }
+  .back-btn:focus-visible{
+    outline:3px solid var(--brand-blue);
+    outline-offset:2px;
+  }
+
+  .recap{
+    background:linear-gradient(145deg, var(--brand-blue), var(--brand-blue-dark));
+    border-radius:20px;
+    padding:20px 18px;
+    margin-bottom:22px;
+    box-shadow:0 14px 28px -10px rgba(27,63,158,.4);
+  }
+  .recap-en{
+    margin:0 0 8px;
+    font-family:var(--font-quote);
+    font-style:italic;
+    font-size:17px;
+    line-height:1.5;
+    color:var(--white);
+    font-weight:600;
+  }
+  .recap-zh{
+    margin:0;
+    font-size:13px;
+    line-height:1.6;
+    color:rgba(255,255,255,.82);
+  }
+
+  .detail-section{
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    margin:0 0 12px;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--brand-blue);
+    padding-bottom:8px;
+    border-bottom:1px solid var(--blue-tint-strong);
+  }
+
+  .vocab-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .vocab-item{
+    background:var(--white);
+    border-radius:14px;
+    padding:12px 14px;
+    border:1px solid var(--blue-tint-strong);
+  }
+  .vocab-word{
+    font-family:var(--font-quote);
+    font-weight:700;
+    color:var(--brand-blue-dark);
+    font-size:15px;
+  }
+  .vocab-pos{
+    font-style:italic;
+    color:var(--ink-faint);
+    font-size:12px;
+    margin-left:6px;
+  }
+  .vocab-meaning{
+    display:block;
+    margin-top:4px;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    line-height:1.5;
+  }
+
+  .scenario-text{
+    margin:0;
+    background:var(--white);
+    border-radius:14px;
+    padding:14px 16px;
+    border:1px solid var(--blue-tint-strong);
+    color:var(--ink-soft);
+    font-size:13.5px;
+    line-height:1.7;
+  }
+
+  .alt-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .alt-item{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    background:var(--white);
+    border-radius:14px;
+    padding:11px 14px;
+    border:1px solid var(--blue-tint-strong);
+    font-size:13.5px;
+    color:var(--ink);
+    line-height:1.5;
+  }
+  .alt-arrow{
+    color:var(--brand-blue);
+    font-weight:700;
+    flex-shrink:0;
+  }
+
+  /* ---------- AI 助手区块（调用后端代理 + Coze Chat API） ---------- */
+  .detail-section--agent{
+    margin-bottom:8px;
+  }
+  .agent-hint-text{
+    margin:0 0 10px;
+    font-size:12px;
+    line-height:1.5;
+    color:var(--ink-faint);
+  }
+  .agent-chat{
+    display:flex;
+    gap:8px;
+    align-items:flex-end;
+    margin-bottom:12px;
+  }
+  .agent-input{
+    flex:1 1 auto;
+    resize:none;
+    font-family:inherit;
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--ink);
+    background:var(--white);
+    border:1px solid var(--blue-tint-strong);
+    border-radius:14px;
+    padding:10px 12px;
+  }
+  .agent-input:focus-visible{
+    outline:3px solid var(--brand-blue);
+    outline-offset:1px;
+  }
+  .agent-send-btn{
+    appearance:none;
+    border:none;
+    flex-shrink:0;
+    background:var(--brand-blue);
+    color:var(--white);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:700;
+    padding:10px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s ease, opacity .15s ease;
+  }
+  .agent-send-btn:hover{ background:var(--brand-blue-dark); }
+  .agent-send-btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+  .agent-send-btn:focus-visible{
+    outline:3px solid var(--brand-blue-dark);
+    outline-offset:2px;
+  }
+  .agent-reply{
+    min-height:20px;
+    background:var(--white);
+    border:1px solid var(--blue-tint-strong);
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:13.5px;
+    line-height:1.65;
+    color:var(--ink-soft);
+    white-space:pre-wrap;
+  }
+  .agent-reply.is-loading{ color:var(--ink-faint); font-style:italic; }
+  .agent-reply.is-error{ color:#B3261E; }
+
+  /* ---------- Footer ---------- */
+  .app-footer{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    background:var(--white);
+    border-top:1px solid var(--blue-tint-strong);
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .footer-icon{ font-size:16px; }
+  .footer-text strong{ color:var(--brand-blue); }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="phone">
+
+    <header class="app-header">
+      <p class="app-name">每日英语小贴</p>
+      <p class="app-date" id="dateDisplay">加载中…</p>
+    </header>
+
+    <main class="stage" id="stage">
+
+      <section class="view view-card" id="cardView">
+        <article class="card" id="tipCard" role="button" tabindex="0" aria-label="点击查看今日金句详解">
+          <span class="tape" aria-hidden="true"></span>
+
+          <div class="card-top">
+            <div class="mascot">
+              <span id="mascotEmoji">😊</span>
+              <span class="pulse-ring" aria-hidden="true"></span>
+            </div>
+            <span class="day-pill" id="dayPill">MON</span>
+          </div>
+
+          <blockquote class="quote">
+            <span class="quote-mark" aria-hidden="true">“</span>
+            <p class="quote-en" id="quoteEn"></p>
+            <p class="quote-zh" id="quoteZh"></p>
+          </blockquote>
+
+          <div class="card-bottom">
+            <span class="streak-chip" id="streakChip">🔥 连续打卡 1 天</span>
+            <span class="tap-hint">点击查看详解 →</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="view view-detail" id="detailView" aria-hidden="true">
+        <div class="detail-header">
+          <button class="back-btn" id="backBtn" type="button">← 返回</button>
+          <span class="day-pill day-pill--ghost" id="dayPillDetail">MON</span>
+        </div>
+
+        <div class="recap">
+          <p class="recap-en" id="recapEn"></p>
+          <p class="recap-zh" id="recapZh"></p>
+        </div>
+
+        <section class="detail-section">
+          <h2 class="eyebrow">词汇拆解</h2>
+          <ul class="vocab-list" id="vocabList"></ul>
+        </section>
+
+        <section class="detail-section">
+          <h2 class="eyebrow">场景用法</h2>
+          <p class="scenario-text" id="scenarioText"></p>
+        </section>
+
+        <section class="detail-section">
+          <h2 class="eyebrow">替换表达</h2>
+          <ul class="alt-list" id="altList"></ul>
+        </section>
+
+        <section class="detail-section detail-section--agent">
+          <h2 class="eyebrow">🤖 问AI助手</h2>
+          <p class="agent-hint-text">已经帮你填好了解析请求，可以直接发送，也可以先改成自己想问的问题</p>
+          <div class="agent-chat">
+            <textarea id="agentInput" class="agent-input" rows="2"></textarea>
+            <button class="agent-send-btn" id="agentSendBtn" type="button">发送</button>
+          </div>
+          <div class="agent-reply" id="agentReply" aria-live="polite"></div>
+        </section>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <span class="footer-icon" aria-hidden="true">✅</span>
+      <span class="footer-text">今日打卡 · 第<strong id="streakDayNum">1</strong>天</span>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // 数据：键为 Date.getDay() 返回值（0=周日 … 6=周六）
+  var DATA = {
+    1: { // 周一
+      dayEn:'MON', dayZh:'周一', emoji:'😊',
+      en:"We need to align on the timeline before the end of this week.",
+      zh:"我们需要在本周末前对齐时间线。",
+      vocab:[
+        ['align','v.','达成一致，使协调一致'],
+        ['timeline','n.','时间线，进度安排'],
+        ['by the end of','phrase','在……结束之前']
+      ],
+      scenario:'常用于项目启动或阶段性推进会议中，当团队成员就关键节点尚未达成共识时，用来礼貌地推动大家对齐进度。',
+      alts:[
+        'Let\'s sync up on the schedule this week.',
+        'We should get on the same page about the timeline.',
+        'Can we finalize the timeline by Friday?'
+      ]
+    },
+    2: { // 周二
+      dayEn:'TUE', dayZh:'周二', emoji:'😊',
+      en:"Could you please clarify the delivery schedule for this order?",
+      zh:"您能澄清一下这笔订单的交付时间表吗？",
+      vocab:[
+        ['clarify','v.','澄清，阐明'],
+        ['delivery schedule','n.','交付时间表'],
+        ['order','n.','订单']
+      ],
+      scenario:'用于与供应商或客户沟通订单细节时，礼貌地要求对方进一步说明交付安排，避免后续产生误解。',
+      alts:[
+        'Could you walk me through the delivery timeline?',
+        'Would you mind confirming the shipping dates?',
+        'I\'d appreciate more detail on when this will be delivered.'
+      ]
+    },
+    3: { // 周三
+      dayEn:'WED', dayZh:'周三', emoji:'🤔',
+      en:"Let's circle back on this after the client meeting.",
+      zh:"我们在客户会议后再回来讨论这个。",
+      vocab:[
+        ['circle back','phrase','稍后再讨论，回头再谈'],
+        ['client meeting','n.','客户会议']
+      ],
+      scenario:'会议中遇到暂时无法深入讨论的议题时使用，礼貌地推迟话题，同时明确后续会跟进的时间点。',
+      alts:[
+        'Let\'s revisit this after the call.',
+        'We can pick this up again later today.',
+        'I\'ll follow up on this once the meeting wraps up.'
+      ]
+    },
+    4: { // 周四
+      dayEn:'THU', dayZh:'周四', emoji:'🤔',
+      en:"I'd like to propose a revision to the contract terms.",
+      zh:"我想对合同条款提出一个修改建议。",
+      vocab:[
+        ['propose','v.','提议，建议'],
+        ['revision','n.','修改，修订'],
+        ['contract terms','n.','合同条款']
+      ],
+      scenario:'用于合同谈判或商务往来邮件中，正式且礼貌地提出修改意见，为后续协商留出空间。',
+      alts:[
+        'I\'d suggest we revisit a few clauses in the contract.',
+        'Could we discuss amending the terms slightly?',
+        'I have a few thoughts on adjusting the agreement.'
+      ]
+    },
+    5: { // 周五
+      dayEn:'FRI', dayZh:'周五', emoji:'🤩',
+      en:"We appreciate your partnership and look forward to future collaboration.",
+      zh:"我们感谢您的合作，并期待未来的协作。",
+      vocab:[
+        ['appreciate','v.','感激，重视'],
+        ['partnership','n.','合作关系'],
+        ['look forward to','phrase','期待']
+      ],
+      scenario:'常用于邮件结尾或会议收尾时，向合作伙伴表达感谢，并为未来的合作留下积极的基调。',
+      alts:[
+        'Thank you for being such a great partner.',
+        'We\'re excited about what\'s ahead for us.',
+        'Looking forward to continuing to work together.'
+      ]
+    },
+    6: { // 周六
+      dayEn:'SAT', dayZh:'周六', emoji:'😎',
+      en:"Taking a short break to recharge is also part of professional growth.",
+      zh:"短暂休息充电也是职业成长的一部分。",
+      vocab:[
+        ['recharge','v.','充电，恢复精力'],
+        ['professional growth','n.','职业成长']
+      ],
+      scenario:'用于提醒自己或同事劳逸结合，强调休息与工作效率、长期发展之间的关系，适合周末轻松语境。',
+      alts:[
+        'Rest is productive too.',
+        'Stepping away for a bit helps you come back stronger.',
+        'Balance is part of doing good work.'
+      ]
+    },
+    0: { // 周日
+      dayEn:'SUN', dayZh:'周日', emoji:'😌',
+      en:"A good plan today is better than a perfect plan tomorrow.",
+      zh:"今天的好计划胜过明天的完美计划。",
+      vocab:[
+        ['plan','n.','计划'],
+        ['perfect','adj.','完美的']
+      ],
+      scenario:'常用于周计划、复盘或团队激励语境中，鼓励尽早行动而非过度追求完美方案。',
+      alts:[
+        'Done is better than perfect.',
+        'Progress beats perfection.',
+        'Start now, refine later.'
+      ]
+    }
+  };
+
+  var now = new Date();
+  var weekdayIdx = now.getDay();
+  var data = DATA[weekdayIdx];
+
+  var weekdayNamesZh = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+  // ---- 填充日期 ----
+  document.getElementById('dateDisplay').textContent =
+    now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 ' + weekdayNamesZh[weekdayIdx];
+
+  // ---- 自动计算连续打卡天数 ----
+  // 假设：用户从「基准日期」当天开始打卡，基准日当天记为第 1 天。
+  // 例如基准日为 7 月 1 日、今天是 7 月 9 日，则 7/1=第1天 … 7/9=第9天。
+  // 如需从别的日期开始计算，只需修改下面的年/月/日（月份从 0 开始，7月对应 6）。
+  var BASELINE_YEAR = now.getFullYear();
+  var BASELINE_MONTH = 6;  // 6 = 7月
+  var BASELINE_DAY = 1;    // 7月1日
+
+  var baselineDate = new Date(BASELINE_YEAR, BASELINE_MONTH, BASELINE_DAY);
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 去掉时分秒，避免时区/DST误差
+
+  var msPerDay = 24 * 60 * 60 * 1000;
+  var diffDays = Math.round((today - baselineDate) / msPerDay);
+
+  // 基准日当天算第 1 天；若今天早于基准日（异常情况），保底显示第 1 天。
+  var streakDays = diffDays >= 0 ? diffDays + 1 : 1;
+
+  document.getElementById('streakChip').textContent = '🔥 连续打卡 ' + streakDays + ' 天';
+  document.getElementById('streakDayNum').textContent = streakDays;
+
+  // ---- 填充卡片 ----
+  document.getElementById('mascotEmoji').textContent = data.emoji;
+  document.getElementById('dayPill').textContent = data.dayEn;
+  document.getElementById('quoteEn').textContent = data.en;
+  document.getElementById('quoteZh').textContent = data.zh;
+
+  // ---- 填充详情页 ----
+  document.getElementById('dayPillDetail').textContent = data.dayEn;
+  document.getElementById('recapEn').textContent = data.en;
+  document.getElementById('recapZh').textContent = data.zh;
+  document.getElementById('scenarioText').textContent = data.scenario;
+
+  var vocabList = document.getElementById('vocabList');
+  data.vocab.forEach(function(item){
+    var li = document.createElement('li');
+    li.className = 'vocab-item';
+    li.innerHTML =
+      '<span class="vocab-word">' + item[0] + '</span>' +
+      '<span class="vocab-pos">' + item[1] + '</span>' +
+      '<span class="vocab-meaning">' + item[2] + '</span>';
+    vocabList.appendChild(li);
+  });
+
+  var altList = document.getElementById('altList');
+  data.alts.forEach(function(text){
+    var li = document.createElement('li');
+    li.className = 'alt-item';
+    li.innerHTML = '<span class="alt-arrow">→</span><span>' + text + '</span>';
+    altList.appendChild(li);
+  });
+
+  // ---- AI 助手：通过自建后端代理调用 Coze Chat API ----
+  // 重要：真正的 Coze Token 不会出现在这份前端代码的任何地方。
+  // 这里只请求同源的 /api/coze-chat 接口；服务端（见 api/coze-chat.js）
+  // 用环境变量里的 Token 去调用 Coze，再把结果转发回来。
+  // 如果把这份 HTML 和 api/coze-chat.js 部署在不同域名下，
+  // 把下面这个地址改成后端代理的完整 URL，
+  // 例如 'https://your-project.vercel.app/api/coze-chat'。
+  var AGENT_PROXY_URL = '/api/coze-chat';
+
+  var agentInput = document.getElementById('agentInput');
+  var agentSendBtn = document.getElementById('agentSendBtn');
+  var agentReply = document.getElementById('agentReply');
+  var agentPrefilled = false;
+
+  function fillDefaultPrompt(){
+    // 只在第一次打开详情页时预填，避免覆盖用户已经改过的问题
+    if(!agentPrefilled){
+      agentInput.value = '请帮我解析这句话：' + data.en;
+      agentPrefilled = true;
+    }
+  }
+
+  function setAgentReply(text, state){
+    agentReply.textContent = text;
+    agentReply.classList.remove('is-loading', 'is-error');
+    if(state){ agentReply.classList.add(state); }
+  }
+
+  function sendToAgent(){
+    var message = agentInput.value.trim();
+    if(!message){
+      agentInput.focus();
+      return;
+    }
+
+    agentSendBtn.disabled = true;
+    setAgentReply('思考中…', 'is-loading');
+
+    fetch(AGENT_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message })
+    })
+      .then(function(resp){
+        return resp.json().then(function(body){ return { ok: resp.ok, body: body }; });
+      })
+      .then(function(result){
+        if(result.ok && result.body && result.body.reply){
+          setAgentReply(result.body.reply, null);
+        } else {
+          var errMsg = (result.body && result.body.error) ? result.body.error : '未知错误';
+          setAgentReply('请求失败：' + errMsg, 'is-error');
+        }
+      })
+      .catch(function(err){
+        setAgentReply('网络请求出错，请稍后重试。（' + err.message + '）', 'is-error');
+      })
+      .then(function(){
+        agentSendBtn.disabled = false;
+      });
+  }
+
+  agentSendBtn.addEventListener('click', sendToAgent);
+  agentInput.addEventListener('keydown', function(e){
+    if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){
+      e.preventDefault();
+      sendToAgent();
+    }
+  });
+
+  // ---- 交互：卡片 <-> 详情页 ----
+  var stage = document.getElementById('stage');
+  var card = document.getElementById('tipCard');
+  var backBtn = document.getElementById('backBtn');
+  var cardView = document.getElementById('cardView');
+  var detailView = document.getElementById('detailView');
+
+  function openDetail(){
+    stage.classList.add('detail-active');
+    detailView.setAttribute('aria-hidden', 'false');
+    cardView.setAttribute('aria-hidden', 'true');
+    fillDefaultPrompt();
+    backBtn.focus();
+  }
+
+  function closeDetail(){
+    stage.classList.remove('detail-active');
+    detailView.setAttribute('aria-hidden', 'true');
+    cardView.setAttribute('aria-hidden', 'false');
+    card.focus();
+  }
+
+  card.addEventListener('click', openDetail);
+  card.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      openDetail();
+    }
+  });
+  backBtn.addEventListener('click', closeDetail);
+})();
+</script>
+
+</body>
+</html>
